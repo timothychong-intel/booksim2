@@ -29,40 +29,47 @@
 #define _INJECTION_HPP_
 
 #include "config_utils.hpp"
+#include "wkld_comp.hpp"
 
 using namespace std;
 
-class InjectionProcess {
+class InjectionProcess : public WorkloadComponent {
 protected:
   int _nodes;
-  double _rate;
-  InjectionProcess(int nodes, double rate);
+  vector<double> _rate;
+  InjectionProcess(int nodes, vector<double> rate);
 public:
   virtual ~InjectionProcess() {}
   virtual bool test(int source) = 0;
   virtual void reset();
-  static InjectionProcess * New(string const & inject, int nodes, double load, 
+
+  // new interface for injectors that want to provide all packet info, return false if not implemented
+  virtual WorkloadMessagePtr get(int source) { return NULL; }
+  virtual void print_stats() {}
+  virtual void set_state(int node, float val) {}
+
+  static InjectionProcess * New(string const & inject, int nodes, vector<double> load,
 				Configuration const * const config = NULL);
 };
 
 class BernoulliInjectionProcess : public InjectionProcess {
 public:
-  BernoulliInjectionProcess(int nodes, double rate);
+  BernoulliInjectionProcess(int nodes, vector<double> rate);
   virtual bool test(int source);
 };
 
 class OnOffInjectionProcess : public InjectionProcess {
 private:
-  double _alpha;
-  double _beta;
-  double _r1;
+  vector<double> _alpha;
+  vector<double> _beta;
+  vector<double> _r1;
   vector<int> _initial;
   vector<int> _state;
 public:
-  OnOffInjectionProcess(int nodes, double rate, double alpha, double beta, 
-			double r1, vector<int> initial);
+  OnOffInjectionProcess(int nodes, vector<double> rate, vector<double> alpha, vector<double> beta,
+			vector<double> r1, vector<int> initial);
   virtual void reset();
   virtual bool test(int source);
 };
 
-#endif 
+#endif

@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -42,9 +42,9 @@ stack<Flit *> Flit::_free;
 
 ostream& operator<<( ostream& os, const Flit& f )
 {
-  os << "  Flit ID: " << f.id << " (" << &f << ")" 
+  os << "  Flit ID: " << f.id << " (" << &f << ")"
      << " Packet ID: " << f.pid
-     << " Type: " << f.type 
+     << " Type: " << f.type
      << " Head: " << f.head
      << " Tail: " << f.tail << endl;
   os << "  Source: " << f.src << "  Dest: " << f.dest << " Intm: "<<f.intm<<endl;
@@ -53,13 +53,13 @@ ostream& operator<<( ostream& os, const Flit& f )
   return os;
 }
 
-Flit::Flit() 
-{  
+Flit::Flit()
+{
   Reset();
-}  
+}
 
-void Flit::Reset() 
-{  
+void Flit::Reset()
+{
   type      = ANY_TYPE ;
   vc        = -1 ;
   cl        = -1 ;
@@ -76,11 +76,62 @@ void Flit::Reset()
   intm = 0;
   src = -1;
   dest = -1;
+  debug_dest = -1;
   pri = 0;
   intm =-1;
   ph = -1;
   data = 0;
-}  
+  packet_seq_num = -1;
+  ack_seq_num = -1;
+  nack_seq_num = -1;
+  sack = false;
+  sack_vec = -1;
+  read_requested_data_size = 0;
+  non_duplicate_ack = false;
+}
+
+void Flit::copy(Flit * flit) {
+  type = flit->type;
+  // Do not copy vc
+  cl = flit->cl;
+  head = flit->head;
+  tail = flit->tail;
+  ctime = flit->ctime;
+  itime = flit->itime;
+  atime = flit->atime;
+  id = flit->id;
+  pid = flit->pid;
+  record = flit->record;
+  src = flit->src;
+  dest = flit->dest;
+  debug_dest = flit->debug_dest;
+  pri = flit->pri;
+  hops = flit->hops;
+  watch = flit->watch;
+  subnetwork = flit->subnetwork;
+  size = flit->size;
+  non_duplicate_ack = flit->non_duplicate_ack;
+  read_requested_data_size = flit->read_requested_data_size;
+  packet_seq_num = flit->packet_seq_num;
+  response_to_seq_num = flit->response_to_seq_num;
+  transmit_attempts = flit->transmit_attempts;
+  // Do not copy acks
+  // ack_seq_num
+  // nack_seq_num
+  // sack
+  // sack_vec
+  intm = flit->intm;
+  ph = flit->ph;
+  data = flit->data;
+
+}
+
+void Flit::copy_target(Flit * flit) {
+    // Copying at target should include ack seq num and nack seq num
+    copy(flit);
+    ack_seq_num = flit->ack_seq_num;
+    nack_seq_num = flit->nack_seq_num;
+}
 
 Flit * Flit::New() {
   Flit * f;

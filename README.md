@@ -1,12 +1,34 @@
-BookSim Interconnection Network Simulator
-=========================================
+# BookSim Simulator Feature Enhancement
 
-BookSim is a cycle-accurate interconnection network simulator.
-Originally developed for and introduced with the [Principles and Practices of Interconnection Networks](http://cva.stanford.edu/books/ppin/) book, its functionality has since been continuously extended.
-The current major release, BookSim 2.0, supports a wide range of topologies such as mesh, torus and flattened butterfly networks, provides diverse routing algorithms and includes numerous options for customizing the network's router microarchitecture.
+This repository introduces a suite of feature enhancements to the BookSim simulator, a cycle-level simulator modeling credit-based interconnection networks.
 
----
+## 1. Lossy Network Router Simulation
 
-If you use BookSim in your research, we would appreciate the following citation in any publications to which it has contributed:
+The original BookSim model is equipped with lossless routers that leverage credit-based flow control to manage traffic between routers.
+We have introduced a lossy router simulation that allows for the simulation of packet drops when router queues reach capacity.
+In paritcular, packets transmitted from an upstream router that cannot be accommodated in the buffer of the next router are dropped.
 
-Nan Jiang, Daniel U. Becker, George Michelogiannakis, James Balfour, Brian Towles, John Kim and William J. Dally. A Detailed and Flexible Cycle-Accurate Network-on-Chip Simulator. In *Proceedings of the 2013 IEEE International Symposium on Performance Analysis of Systems and Software*, 2013.
+## 2. End-to-End Reliability Model
+
+We have extended the model to incorporate an end-to-end reliability protocol based on sequence numbers.
+This feature implements explicit negative acknowledgements (NACKs), sent from the receiving end back to the source upon detection of packet loss (e.g., due to sequence number mismatches).
+
+## 3. Application-Behavior-Based Simulation Model
+
+We introduces a back-end application model.
+This model allows for simulations driven by application behavior descriptions, offering a approach to network simulation that aligns more closely with real-world application scenarios.
+
+
+## Research and Development Usage
+
+These feature extensions are currently utilized in ongoing research and are not intended as final implementations. They provide a flexible foundation for further development, and users are encouraged to adapt and modify the codebase to suit their specific research requirements.
+
+## Compilation Instructions
+
+To compile the enhanced BookSim simulator, navigate to the src folder and execute `make` with the provided Makefile.
+
+## Acknowledgement / Contributors
+* Timothy Chong
+* Tom Labonte
+* Halit Dogan
+* Carl Beckman

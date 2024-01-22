@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -36,7 +36,7 @@
 #include "booksim_config.hpp"
 
 BookSimConfig::BookSimConfig( )
-{ 
+{
   //========================================================
   // Network options
   //========================================================
@@ -54,7 +54,7 @@ BookSimConfig::BookSimConfig( )
   _int_map["c"] = 1; //concentration
   AddStrField( "routing_function", "none" );
 
-  //simulator tries to correclty adjust latency for node/router placement 
+  //simulator tries to correclty adjust latency for node/router placement
   _int_map["use_noc_latency"] = 1;
 
 
@@ -80,7 +80,7 @@ BookSimConfig::BookSimConfig( )
 
   //==== General options ===================================
 
-  AddStrField( "router", "iq" ); 
+  AddStrField( "router", "iq" );
 
   _int_map["output_delay"] = 0;
   _int_map["credit_delay"] = 0;
@@ -89,7 +89,12 @@ BookSimConfig::BookSimConfig( )
   //with switch speedup flits requires otuput buffering
   //full output buffer will cancel switch allocation requests
   //default setting is unlimited
-  _int_map["output_buffer_size"] = -1;
+  //  _int_map["output_buffer_size"] = -1;
+  //_int_map["output_buffer_size_in_kb"] = 32768;    // 1MB = 32768 flits
+  _int_map["output_buffer_size_in_kb"] = 1024;
+
+  //  _int_map["router_total_buffer_size"] = 16777216/32;  // 16MB = 524288 flits
+  _int_map["router_total_buffer_size"] = 16777216;  // 16M flits: huge enough to drop cause drops
 
   // enable next-hop-output queueing
   _int_map["noq"] = 0;
@@ -102,8 +107,8 @@ BookSimConfig::BookSimConfig( )
   _int_map["spec_check_cred"] = 1 ;
   _int_map["spec_mask_by_reqs"] = 0 ;
   AddStrField("spec_sw_allocator", "prio");
-  
-  _int_map["num_vcs"]         = 16;  
+
+  _int_map["num_vcs"]         = 16;
   _int_map["vc_buf_size"]     = 8;  //per vc buffer size
   _int_map["buf_size"]        = -1; //shared buffer size
   AddStrField("buffer_policy", "private"); //buffer sharing policy
@@ -132,25 +137,25 @@ BookSimConfig::BookSimConfig( )
   _int_map["input_speedup"]     = 1;  // expansion of input ports into crossbar
   _int_map["output_speedup"]    = 1;  // expansion of output ports into crossbar
 
-  _int_map["routing_delay"]    = 1;  
-  _int_map["vc_alloc_delay"]   = 1;  
-  _int_map["sw_alloc_delay"]   = 1;  
+  _int_map["routing_delay"]    = 0;
+  _int_map["vc_alloc_delay"]   = 1;
+  _int_map["sw_alloc_delay"]   = 1;
   _int_map["st_prepare_delay"] = 0;
   _int_map["st_final_delay"]   = 1;
 
   //==== Event-driven =====================================
 
-  _int_map["vct"] = 0; 
+  _int_map["vct"] = 0;
 
   //==== Allocators ========================================
 
-  AddStrField( "vc_allocator", "islip" ); 
-  AddStrField( "sw_allocator", "islip" ); 
-  
+  AddStrField( "vc_allocator", "islip" );
+  AddStrField( "sw_allocator", "islip" );
+
   AddStrField( "arb_type", "round_robin" );
-  
+
   _int_map["alloc_iters"] = 1;
-  
+
   //==== Traffic ========================================
 
   _int_map["classes"] = 1;
@@ -165,7 +170,8 @@ BookSimConfig::BookSimConfig( )
 
   _float_map["injection_rate"]       = 0.1;
   AddStrField("injection_rate", ""); // workaraound to allow for vector specification
-  
+  AddStrField("injection_override", "");  // Per node injection rates
+
   _int_map["injection_rate_uses_flits"] = 0;
 
   // number of flits per packet
@@ -211,14 +217,165 @@ BookSimConfig::BookSimConfig( )
   _int_map["write_reply_subnet"] = 0;
 
   // Set packet length in flits
-  _int_map["read_request_size"]  = 1;
+  _int_map["read_request_size"]  = 2;
   AddStrField("read_request_size", ""); // workaraound to allow for vector specification
-  _int_map["write_request_size"] = 1;
+  _int_map["write_request_size"] = 2;
   AddStrField("write_request_size", ""); // workaraound to allow for vector specification
-  _int_map["read_reply_size"]    = 1;
+  _int_map["read_reply_size"]    = 2;
   AddStrField("read_reply_size", ""); // workaraound to allow for vector specification
-  _int_map["write_reply_size"]   = 1;
+  _int_map["write_reply_size"]   = 2;
   AddStrField("write_reply_size", ""); // workaraound to allow for vector specification
+
+
+  //==== Endpoint parameters ==========================
+  AddStrField("debug_endpoint", "");
+  _int_map["cycles_before_standalone_ack"] = 312;
+  _int_map["packets_before_standalone_ack"] = 4;
+
+  _int_map["enable_sack"] = 0;
+  _int_map["sack_vec_length"] = 8;
+  _int_map["debug_sack"] = 0;
+
+  _int_map["trace_debug"] = 0;
+  // A receiver can process the receipt of up to 64 younger packets after seeing
+  // an older packet get dropped.  This mimics the hardware design, and may need
+  // adjustment in the future.
+  _int_map["max_receivable_pkts_after_drop"] = 64;
+  _int_map["opb_max_pkt_occupancy"] = 2048;
+  _int_map["opb_ways"] = 2;
+  _int_map["opb_dest_idx_bits"] = 3;
+  _int_map["opb_seq_num_idx_bits"] = 7;
+  _int_map["inj_buf_depth"] = 16;
+  _int_map["packet_gen_attempts"] = 3;
+  //  _int_map["retry_timer_timeout"] = 2000;
+  _int_map["retry_timer_timeout"] = 400000;  // 1ms
+  _int_map["max_retry_attempts"] = 50;
+  //  _int_map["response_timer_timeout"] = 200000;  // 500us
+  _int_map["response_timer_timeout"] = 800000;  // 2ms
+  //  _int_map["rget_req_pull_timeout"] = 300000;   // 750us
+  _int_map["rget_req_pull_timeout"] = 800000;   // 2ms
+  _int_map["use_endpoint_crediting"] = 1;
+//  _int_map["endpoint_xaction_limit_per_dest"] = 25;             // RATE_LIMIT.num_reqs
+//  _int_map["endpoint_get_limit_per_dest"] = 15;                 // GET_RATE_LIMIT.num_reqs
+//  _int_map["endpoint_get_inbound_size_limit_per_dest"] = 2560;  // GET_RATE_LIMIT.data_size (in flits = 80KB)
+//  _int_map["endpoint_rget_req_limit_per_dest"] = 16;            // RGET_RATE_LIMIT.num_reqs
+//  _int_map["endpoint_rget_inbound_size_limit_per_dest"] = 2048; // RGET_RATE_LIMIT.data_size (in flits = 64KB)
+//  _int_map["endpoint_use_new_rget_metering"] = 0;
+
+// Venkat's latest configs:
+  _int_map["endpoint_xaction_limit_per_dest"] = 50;             // RATE_LIMIT.num_reqs
+  _int_map["endpoint_xaction_size_limit_per_dest_in_kb"] = 128;
+
+  AddStrField("host_congestion_active", "");
+
+  //_int_map["endpoint_get_limit_per_dest"] = 40;                 // GET_RATE_LIMIT.num_reqs
+  //_int_map["endpoint_get_inbound_size_limit_per_dest_in_kb"] = 128;  // GET_RATE_LIMIT.data_size
+  _int_map["endpoint_get_limit_per_dest"] = 90;                 // GET_RATE_LIMIT.num_reqs
+  _int_map["endpoint_get_inbound_size_limit_per_dest_in_kb"] = 128;  // GET_RATE_LIMIT.data_size
+
+
+
+  // This deadlocks because RGET reqs take up limit of all transactions
+  //_int_map["endpoint_rget_req_limit_per_dest"] = 90;            // RGET_RATE_LIMIT.num_reqs
+    //_int_map["endpoint_rget_inbound_size_limit_per_dest"] = 4688; // RGET_RATE_LIMIT.data_size (in flits = 150KB)
+  _int_map["endpoint_rget_req_limit_per_dest"] = 90;            // RGET_RATE_LIMIT.num_reqs
+  _int_map["endpoint_rget_inbound_size_limit_per_dest_in_kb"] = 150;
+
+
+
+
+  _int_map["endpoint_use_new_rget_metering"] = 1;
+
+  _int_map["endpoint_global_get_limit"] = 512;
+  _int_map["endpoint_global_get_req_size_limit_in_kb"] = 196;
+  //_int_map["endpoint_global_get_limit"] = 512;
+  //_int_map["endpoint_global_get_req_size_limit"] = 6144; // in flits = 196KB
+
+  AddStrField("endpoint_tx_arb_type", "round_robin");
+  // Weighted Scheduler Knobs
+  //   These first 2 are used for the init value and the max.
+  _int_map["weighted_sched_req_tokens"] = 128;  // in flits
+  _int_map["weighted_sched_rsp_tokens"] = 128;  // in flits
+  _int_map["weighted_sched_incr_tokens"] = 32;  // in flits
+  _int_map["weighted_sched_rsp_incr_mult"] = 2;
+  // Latency Knobs
+  _int_map["ack_processing_latency"] = 172;                // 429ns * 400MHz
+  _int_map["rsp_processing_latency"] = 0;
+  _int_map["req_processing_latency"] = 250;                // 429ns * 400MHz
+  _int_map["rget_processing_latency"] = 1;                 // RGET_GET_REQUESTS produced 1 cycle after RGET_REQUEST received
+  _int_map["packet_processing_penalty"] = 38;              // 97ns measured from hardware
+  _int_map["max_flits_waiting_to_inject"] = 8192;          // 8192 = 256KB / 32B per flit (matches real HW)
+
+  _float_map["put_to_rget_conversion_rate"] = 0.0;
+  // Knobs for RGET adaptive conversion
+  _int_map["enable_adaptive_rget"] = 0;
+  _int_map["rget_convert_sample_period"] = 5000;
+  _int_map["rget_convert_num_samples"] = 2;
+  // Minimum percentage of outstanding write data that has to be acked to
+  // prevent switching PUTs to RGETs.  For example: if less than 50% of
+  // outstanding write data has been acked, then we will switch to RGETs.
+  _float_map["rget_convert_unacked_perc"] = 0.5;
+  // The minimum percentage of outstanding write data that has to be acked
+  // to switch back from RGETs to PUTs.
+  _float_map["rget_revert_acked_perc"] = 0.9;
+  _int_map["rget_convert_min_data_before_convert"] = 1172;
+  _int_map["rget_min_samples_since_last_transition"] = 2;
+  //==== Lossy Router parameters ======================
+  _float_map["switch_drop_rate"] = 0.0;
+  _int_map["crossbar_latency"] = -1;
+
+  //==== Put queue parameters ======================
+  _int_map["put_wait_buf_size"] = 1000; // This is the total size for flits (32B each) 32KB
+  _int_map["put_latency_header"] = 25/2.5; // In number of cycles
+  _int_map["put_header_flit"] = 2; // Take out in calculating transfer time
+
+  _int_map["load_balance_buf_size"] = 1000; // This is the total size for flits (32B each) 32KB
+
+
+  _float_map["host_bandwidth_gbps"] = 103;
+  _float_map["host_bandwidth_gbps_low"] = 50;
+
+  _float_map["inter_host_bandwidth_change_mean"] = 10000;
+  _float_map["inter_host_bandwidth_change_variance"] = 0.1;
+
+
+  // To simulate burstiness, we'll have a number of flits all transfering at slow rate
+  _int_map["put_latency_slow_length"] = 5;
+  // host side runs at normal speed for this amount of data
+  _int_map["put_latency_normal_length"] = 5;
+
+  _int_map["mypolicy_delayed_ack_threshold"] = 281;
+  _int_map["mypoicy_NACK_reservation_size"] = 281;
+
+  _int_map["max_no_accepted_flit_period"] = 10;
+
+  _int_map["host_control_max_packet_send_per_ack"] = 1;
+  _int_map["host_control_max_ack_before_send_packet"] = 1;
+  _int_map["host_control_policy"] = 0;
+  _int_map["host_control_timeout"] = 16000;
+  _float_map["host_control_fairness_diff_threshold"] = 0.025;
+
+  _int_map["shared_ack_timeout"] = 8000;
+
+  _int_map["speculative_ack_queue_size"] = 4;
+
+  // All occupancy counters are reset at each reset period
+  // Then sampling starts, coalescing will not happen until the "sampling period" time has passed
+  // Sampling will continue after the "period", but coalescing is only allowed after the period
+  // sampling period must be less than reset period
+
+  _int_map["host_control_coalescing_timeout"] = 10000;
+  _int_map["host_control_fairness_sampling_period"] = 1000000000;
+  _int_map["host_control_fairness_packet_count_threshold"] = 160;
+  //_int_map["host_control_fairness_reset_period"] = 10 * _int_map["host_control_fairness_sampling_period"];
+  _int_map["host_control_fairness_reset_period"] = 100000;
+
+  _int_map["suppress_duplicate_acks_between_n_incremental_acks"] = 1;
+
+  // tcp MMS = 1.5K -> 46 flits @ 32b/ flit
+  // May won't work and will need to be increased if packet size is higher
+  _int_map["host_control_tcplikepolicy_MSS"] = 46;
+
 
   //==== Simulation parameters ==========================
 
@@ -232,6 +389,7 @@ BookSimConfig::BookSimConfig( )
 
   _int_map["sample_period"] = 1000; // how long between measurements
   _int_map["max_samples"]   = 10;   // maximum number of sample periods in a simulation
+  _int_map["min_samples"]   = 3;    // minimum number of sample periods in a simulation
 
   // whether or not to measure statistics for a given traffic class
   _int_map["measure_stats"] = 1;
@@ -240,7 +398,8 @@ BookSimConfig::BookSimConfig( )
   _int_map["pair_stats"] = 0;
 
   // if avg. latency exceeds the threshold, assume unstable
-  _float_map["latency_thres"] = 500.0;
+  // Latency can spike when we have retranmission and dropping
+  _float_map["latency_thres"] = 99999999.0;
   AddStrField("latency_thres", ""); // workaround to allow for vector specification
 
    // consider warmed up once relative change in latency / throughput between successive iterations is smaller than this
@@ -258,26 +417,27 @@ BookSimConfig::BookSimConfig( )
   _int_map["sim_count"]     = 1;   // number of simulations to perform
 
 
-  _int_map["include_queuing"] =1; // non-zero includes source queuing latency
+  //_int_map["include_queuing"] =1; // non-zero includes source queuing latency
+  _int_map["include_queuing"] =0; // non-zero includes source queuing latency
 
   //  _int_map["reorder"]         = 0;  // know what you're doing
 
   //_int_map["flit_timing"]     = 0;  // know what you're doing
   //_int_map["split_packets"]   = 0;  // know what you're doing
 
-  _int_map["seed"]            = 0; //random seed for simulation, e.g. traffic 
+  _int_map["seed"]            = 0; //random seed for simulation, e.g. traffic
   AddStrField("seed", ""); // workaround to allow special "time" value
 
   _int_map["print_activity"] = 0;
 
   _int_map["print_csv_results"] = 0;
 
-  _int_map["deadlock_warn_timeout"] = 256;
+  _int_map["deadlock_warn_timeout"] = 50000;
 
   _int_map["viewer_trace"] = 0;
 
   AddStrField("watch_file", "");
-  
+
   AddStrField("watch_flits", "");
   AddStrField("watch_packets", "");
   AddStrField("watch_transactions", "");
@@ -304,7 +464,7 @@ BookSimConfig::BookSimConfig( )
 
   // batch only -- packet sequence numbers
   AddStrField("sent_packets_out", "");
-  
+
   //==================Power model params=====================
   _int_map["sim_power"] = 0;
   AddStrField("power_output_file","pwr_tmp");
@@ -314,12 +474,51 @@ BookSimConfig::BookSimConfig( )
 
   //==================Network file===========================
   AddStrField("network_file","");
+
+  //==================SWM configs and arguments===========================
+  //
+  _int_map["swm_work_time"] = 10;
+  _int_map["swm_ppn"] = 1;
+  _int_map["swm_msg_overhead"] = 0;
+  _int_map["swm_core_work"] = 0;
+  _int_map["swm_core_msz"] = 8;          // 10 "cycles" of local work
+  _int_map["swm_app_run_mode"] = false;
+  _int_map["swm_nbi_version"] = 0;
+
+
+  // Bale kernels input parameters
+  _int_map["swm_num_rows"] = 10000;
+  _float_map["swm_edge_density"] = 0.00001;
+
+
+  _int_map["roi"] = 0;
+  _int_map["roi_begin"] = 1;
+  _int_map["roi_end"] = 2;
+  _int_map["roi_begin_count"] = 1;
+  _int_map["roi_end_count"] = 1;
+
+  AddStrField("swm_shmem_barrier", "tree");
+  AddStrField("swm_shmem_reduce", "tree");
+  AddStrField("swm_shmem_bcast", "tree");
+  AddStrField("swm_args", "");
+
+  _int_map["max_num_pkt"] = 0; // debug injection to inject specified number of packets
+  // SmallMessage config
+  _int_map["coalescing_degree"] = 1; // number of small messages the Coalescing buffer can accommodate
+  _float_map["sm_rate_ghz"] = 1.0;
+  _float_map["sm_hist_bin_size"] = 1.0;
+  _int_map["sm_hist_bin_num"] = 1000;
+  _float_map["sm_latency_percent"] = 99.0;
+  _int_map["sm_max_coal_age"] = 0;
+  _float_map["outport_util_estimator"] = 0.0;
+  _float_map["outport_util_threshold"] = 0.0;
+  AddStrField( "fabric", "eth" );
+  AddStrField( "rcu_type", "rcu" );
+
 }
 
-
-
 PowerConfig::PowerConfig( )
-{ 
+{
 
   _int_map["H_INVD2"] = 0;
   _int_map["W_INVD2"] = 0;

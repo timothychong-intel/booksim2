@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -45,7 +45,7 @@ void TrafficPattern::reset()
 
 }
 
-TrafficPattern * TrafficPattern::New(string const & pattern, int nodes, 
+TrafficPattern * TrafficPattern::New(string const & pattern, int nodes,
 				     Configuration const * const config)
 {
   string pattern_name;
@@ -63,7 +63,7 @@ TrafficPattern * TrafficPattern::New(string const & pattern, int nodes,
     }
   }
   vector<string> params = tokenize_str(param_str);
-  
+
   TrafficPattern * result = NULL;
   if(pattern_name == "bitcomp") {
     result = new BitCompTrafficPattern(nodes);
@@ -78,7 +78,8 @@ TrafficPattern * TrafficPattern::New(string const & pattern, int nodes,
     if(params.empty()) {
       if(config) {
 	if(config->GetStr("perm_seed") == "time") {
-	  perm_seed = int(time(NULL));
+      unsigned long long tmp_time = static_cast<unsigned long long>(time(NULL));
+	  perm_seed = static_cast<int>(tmp_time);
 	  cout << "SEED: perm_seed=" << perm_seed << endl;
 	} else {
 	  perm_seed = config->GetInt("perm_seed");
@@ -176,7 +177,7 @@ TrafficPattern * TrafficPattern::New(string const & pattern, int nodes,
   } else if(pattern_name == "hotspot") {
     if(params.empty()) {
       params.push_back("-1");
-    } 
+    }
     vector<int> hotspots = tokenize_int(params[0]);
     for(size_t i = 0; i < hotspots.size(); ++i) {
       if(hotspots[i] < 0) {
@@ -201,7 +202,7 @@ TrafficPattern * TrafficPattern::New(string const & pattern, int nodes,
 PermutationTrafficPattern::PermutationTrafficPattern(int nodes)
   : TrafficPattern(nodes)
 {
-  
+
 }
 
 BitPermutationTrafficPattern::BitPermutationTrafficPattern(int nodes)
@@ -217,7 +218,7 @@ BitPermutationTrafficPattern::BitPermutationTrafficPattern(int nodes)
 BitCompTrafficPattern::BitCompTrafficPattern(int nodes)
   : BitPermutationTrafficPattern(nodes)
 {
-  
+
 }
 
 int BitCompTrafficPattern::dest(int source)
@@ -252,7 +253,7 @@ int TransposeTrafficPattern::dest(int source)
 BitRevTrafficPattern::BitRevTrafficPattern(int nodes)
   : BitPermutationTrafficPattern(nodes)
 {
-  
+
 }
 
 int BitRevTrafficPattern::dest(int source)
@@ -283,7 +284,7 @@ DigitPermutationTrafficPattern::DigitPermutationTrafficPattern(int nodes, int k,
 							       int n, int xr)
   : PermutationTrafficPattern(nodes), _k(k), _n(n), _xr(xr)
 {
-  
+
 }
 
 TornadoTrafficPattern::TornadoTrafficPattern(int nodes, int k, int n, int xr)
@@ -319,7 +320,7 @@ int NeighborTrafficPattern::dest(int source)
 
   int offset = 1;
   int result = 0;
-  
+
   for(int n = 0; n < _n; ++n) {
     result += offset *
       (((source / offset) % (_xr * _k) + 1) % (_xr * _k));
@@ -328,7 +329,7 @@ int NeighborTrafficPattern::dest(int source)
   return result;
 }
 
-RandomPermutationTrafficPattern::RandomPermutationTrafficPattern(int nodes, 
+RandomPermutationTrafficPattern::RandomPermutationTrafficPattern(int nodes,
 								 int seed)
   : TrafficPattern(nodes)
 {
@@ -361,7 +362,7 @@ void RandomPermutationTrafficPattern::randomize(int seed)
     _dest[j] = i;
   }
 
-  RestoreRandomState(save_x, save_u); 
+  RestoreRandomState(save_x, save_u);
 }
 
 int RandomPermutationTrafficPattern::dest(int source)
@@ -460,7 +461,7 @@ int Taper64TrafficPattern::dest(int source)
 BadPermDFlyTrafficPattern::BadPermDFlyTrafficPattern(int nodes, int k, int n)
   : DigitPermutationTrafficPattern(nodes, k, n, 1)
 {
-  
+
 }
 
 int BadPermDFlyTrafficPattern::dest(int source)
@@ -473,7 +474,7 @@ int BadPermDFlyTrafficPattern::dest(int source)
   return ((RandomInt(grp_size_nodes - 1) + ((source / grp_size_nodes) + 1) * grp_size_nodes) % _nodes);
 }
 
-BadPermYarcTrafficPattern::BadPermYarcTrafficPattern(int nodes, int k, int n, 
+BadPermYarcTrafficPattern::BadPermYarcTrafficPattern(int nodes, int k, int n,
 						     int xr)
   : DigitPermutationTrafficPattern(nodes, k, n, xr)
 {
@@ -487,7 +488,7 @@ int BadPermYarcTrafficPattern::dest(int source)
   return RandomInt((_xr * _k) - 1) * (_xr * _k) + row;
 }
 
-HotSpotTrafficPattern::HotSpotTrafficPattern(int nodes, vector<int> hotspots, 
+HotSpotTrafficPattern::HotSpotTrafficPattern(int nodes, vector<int> hotspots,
 					     vector<int> rates)
   : TrafficPattern(nodes), _hotspots(hotspots), _rates(rates), _max_val(-1)
 {
@@ -498,7 +499,7 @@ HotSpotTrafficPattern::HotSpotTrafficPattern(int nodes, vector<int> hotspots,
     int const hotspot = _hotspots[i];
     assert((hotspot >= 0) && (hotspot < _nodes));
     int const rate = _rates[i];
-    assert(rate > 0);
+    assert(rate >= 0);
     _max_val += rate;
   }
 }

@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -47,7 +47,7 @@ Arbiter::Arbiter( Module *parent, const string &name, int size )
     _best_input(-1), _num_reqs(0)
 {
   _request.resize(size);
-  for ( int i = 0 ; i < size ; i++ ) 
+  for ( int i = 0 ; i < size ; i++ )
     _request[i].valid = false ;
 }
 
@@ -79,7 +79,7 @@ int Arbiter::Arbitrate( int* id, int* pri )
 void Arbiter::Clear()
 {
   if(_num_reqs > 0) {
-    
+
     // clear the request vector
     for ( int i = 0; i < _size ; i++ )
       _request[i].valid = false ;
@@ -105,6 +105,7 @@ Arbiter *Arbiter::NewArbiter( Module *parent, const string& name,
     string groups_str = arb_type.substr(left+1, middle-left-1);
     int groups = atoi(groups_str.c_str());
     string sub_arb_type = arb_type.substr(middle+1, right-middle-1);
+    assert(groups);
     a = new TreeArbiter( parent, name, size, groups, sub_arb_type );
   } else assert(false);
   return a;

@@ -5,7 +5,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -13,7 +13,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -21,10 +21,10 @@
  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/                                                                     
-                                                                     
-                                                                     
-                                             
+*/
+
+
+
 #ifndef _DragonFly_HPP_
 #define _DragonFly_HPP_
 
@@ -33,16 +33,16 @@
 
 class DragonFlyNew : public Network {
 
-  int _m;
+  int __attribute__((unused)) _m;
   int _n;
-  int _r;
+  int __attribute__((unused)) _r;
   int _k;
   int _p, _a, _g;
-  int _radix;
-  int _net_size;
-  int _stageout;
-  int _numinput;
-  int _stages;
+  int __attribute__((unused)) _radix;
+  int __attribute__((unused)) _net_size;
+  int __attribute__((unused)) _stageout;
+  int __attribute__((unused)) _numinput;
+  int __attribute__((unused)) _stages;
   int _num_of_switch;
   int _grp_num_routers;
   int _grp_num_nodes;
@@ -52,7 +52,7 @@ class DragonFlyNew : public Network {
   void _BuildNet( const Configuration &config );
 
 
- 
+
 public:
   DragonFlyNew( const Configuration &config, const string & name );
 
@@ -68,7 +68,7 @@ int dragonfly_port(int rID, int source, int dest);
 
 void ugal_dragonflynew( const Router *r, const Flit *f, int in_channel,
 		       OutputSet *outputs, bool inject );
-void min_dragonflynew( const Router *r, const Flit *f, int in_channel, 
+void min_dragonflynew( const Router *r, const Flit *f, int in_channel,
 		       OutputSet *outputs, bool inject );
 
-#endif 
+#endif
