@@ -16,6 +16,7 @@ extern int config_input(char *, int);
 #undef YY_INPUT
 #define YY_INPUT(b, r, ms) (r = config_input(b, ms))
 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 %}
 
 Digit [0-9]

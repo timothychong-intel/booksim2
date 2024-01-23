@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -40,7 +40,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
-
+#include <signal.h>
 
 
 #include <sstream>
@@ -76,6 +76,14 @@ Stats * GetStats(const std::string & name) {
   return test;
 }
 
+bool gSwm = false;
+bool gSwmAppRunMode = false;
+bool gSimEnabled;
+bool gClearStats;
+int gLastClearStatTime = 0;
+bool gShouldSkipDrain = false;
+int gFlitSize = 32; // in bytes
+
 /* printing activity factor*/
 bool gPrintActivity;
 
@@ -110,7 +118,7 @@ bool Simulate( BookSimConfig const & config )
   }
 
   /*tcc and characterize are legacy
-   *not sure how to use them 
+   *not sure how to use them
    */
 
   assert(trafficManager == NULL);
@@ -131,7 +139,7 @@ bool Simulate( BookSimConfig const & config )
   total_time = ((double)(end_time.tv_sec) + (double)(end_time.tv_usec)/1000000.0)
             - ((double)(start_time.tv_sec) + (double)(start_time.tv_usec)/1000000.0);
 
-  cout<<"Total run time "<<total_time<<endl;
+  cout<<"Total run time = "<<total_time<<endl;
 
   for (int i=0; i<subnets; ++i) {
 
@@ -147,12 +155,26 @@ bool Simulate( BookSimConfig const & config )
   delete trafficManager;
   trafficManager = NULL;
 
+  if (result) {
+    cout << "Simulation = PASSED!" << endl << endl;
+  } else {
+    cout << "Simulation = FAILED!" << endl << endl;
+  }
+
   return result;
 }
 
+void ctrlc_callback_handler(int signum) {
+  cout << "Caught Ctrl-C.  Dumping stats." << endl;
+  trafficManager->EndSimulation();
+
+  exit(signum);
+}
 
 int main( int argc, char **argv )
 {
+  // Register Ctrl-C callback handler
+  signal(SIGINT, ctrlc_callback_handler);
 
   BookSimConfig config;
 
@@ -160,16 +182,15 @@ int main( int argc, char **argv )
   if ( !ParseArgs( &config, argc, argv ) ) {
     cerr << "Usage: " << argv[0] << " configfile... [param=value...]" << endl;
     return 0;
- } 
+ }
 
-  
   /*initialize routing, traffic, injection functions
    */
   InitializeRoutingMap( config );
 
   gPrintActivity = (config.GetInt("print_activity") > 0);
   gTrace = (config.GetInt("viewer_trace") > 0);
-  
+
   string watch_out_file = config.GetStr( "watch_out" );
   if(watch_out_file == "") {
     gWatchOut = NULL;
@@ -178,7 +199,7 @@ int main( int argc, char **argv )
   } else {
     gWatchOut = new ofstream(watch_out_file.c_str());
   }
-  
+
 
   /*configure and run the simulator
    */

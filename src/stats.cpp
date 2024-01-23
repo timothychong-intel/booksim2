@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -47,6 +47,8 @@ Stats::Stats( Module *parent, const string &name,
   Module( parent, name ), _num_bins( num_bins ), _bin_size( bin_size )
 {
   Clear();
+  g = new stmpct::gk<double>(0.1);
+  _need_percentile = false;
 }
 
 void Stats::Clear( )
@@ -59,12 +61,16 @@ void Stats::Clear( )
 
   _min = numeric_limits<double>::quiet_NaN();
   _max = -numeric_limits<double>::quiet_NaN();
-  
+
+  if (g)
+    delete g;
+  g = new stmpct::gk<double>(0.1);
   //  _reset = true;
 }
 
 double Stats::Average( ) const
 {
+  if (!_num_samples) return 0.0;
   return _sample_sum / (double)_num_samples;
 }
 
@@ -98,8 +104,18 @@ int Stats::NumSamples( ) const
   return _num_samples;
 }
 
+double Stats::Percentile(double percentile) const{
+    if (!_num_samples) return 0.0;
+    assert(_need_percentile);
+    return g->quantile(percentile);
+}
+
 void Stats::AddSample( double val )
 {
+  if (_need_percentile){
+    g->insert(val);
+  }
+
   ++_num_samples;
   _sample_sum += val;
 
@@ -127,4 +143,9 @@ ostream & operator<<(ostream & os, const Stats & s) {
   }
   os << "]";
   return os;
+}
+
+
+Stats::~Stats() {
+    if (g != NULL) delete g;
 }

@@ -32,7 +32,9 @@ void ran_array(aa,n)    /* put n new random numbers in aa */
   int n;      /* array length (must be at least KK) */
 #endif
 {
-  register int i,j;
+  // Removing register because of error storage class specifier is deprecated and incompatible with C++17
+  /*register int i,j;*/
+  int i,j;
   for (j=0;j<KK;j++) aa[j]=ran_x[j];
   for (;j<n;j++) aa[j]=mod_diff(aa[j-KK],aa[j-LL]);
   for (i=0;i<LL;i++,j++) ran_x[i]=mod_diff(aa[j-KK],aa[j-LL]);
@@ -57,15 +59,18 @@ void ran_start(seed)    /* do this before using ran_array */
   long seed;            /* selector for different streams */
 #endif
 {
-  register int t,j;
+  // Removing register because of error storage class specifier is deprecated and incompatible with C++17
+  /*register int t,j;*/
+  int t,j;
   long x[KK+KK-1];              /* the preparation buffer */
-  register long ss=(seed+2)&(MM-2);
+  /*register long ss=(seed+2)&(MM-2);*/
+  long ss=(seed+2)&(MM-2);
   for (j=0;j<KK;j++) {
     x[j]=ss;                      /* bootstrap the buffer */
     ss<<=1; if (ss>=MM) ss-=MM-2; /* cyclic shift 29 bits */
   }
   x[1]++;              /* make x[1] (and only x[1]) odd */
-  for (ss=seed&(MM-1),t=TT-1; t; ) {       
+  for (ss=seed&(MM-1),t=TT-1; t; ) {
     for (j=KK-1;j>0;j--) x[j+j]=x[j], x[j+j-1]=0; /* "square" */
     for (j=KK+KK-2;j>=KK;j--)
       x[j-(KK-LL)]=mod_diff(x[j-(KK-LL)],x[j]),
@@ -97,7 +102,8 @@ long ran_arr_cycle()
 #include <stdio.h>
 int main()
 {
-  register int m; long a[2009]; 
+  // Removing register because of error storage class specifier is deprecated and incompatible with C++17
+  int m; long a[2009];
   ran_start(310952L);
   for (m=0;m<=2009;m++) ran_array(a,1009);
   printf("%ld\n", a[0]);             /* 995235265 */

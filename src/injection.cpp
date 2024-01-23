@@ -7,7 +7,7 @@
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- Redistributions of source code must retain the above copyright notice, this 
+ Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
  Redistributions in binary form must reproduce the above copyright notice, this
  list of conditions and the following disclaimer in the documentation and/or
@@ -15,7 +15,7 @@
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -32,19 +32,24 @@
 #include "random_utils.hpp"
 #include "injection.hpp"
 
+#include "comp_inj.hpp"
+#include "globals.hpp"
+
 using namespace std;
 
-InjectionProcess::InjectionProcess(int nodes, double rate)
+InjectionProcess::InjectionProcess(int nodes, vector<double> rate)
   : _nodes(nodes), _rate(rate)
 {
   if(nodes <= 0) {
     cout << "Error: Number of nodes must be greater than zero." << endl;
     exit(-1);
   }
-  if((rate < 0.0) || (rate > 1.0)) {
-    cout << "Error: Injection process must have load between 0.0 and 1.0."
-	 << endl;
-    exit(-1);
+  for (int n = 0; n < nodes; ++n) {
+    if((rate[n] < 0.0) || (rate[n] > 1.0)) {
+      cout << "Error: Injection process must have load between 0.0 and 1.0.  Found: " << rate[n]
+           << endl;
+      exit(-1);
+    }
   }
 }
 
@@ -53,8 +58,8 @@ void InjectionProcess::reset()
 
 }
 
-InjectionProcess * InjectionProcess::New(string const & inject, int nodes, 
-					 double load, 
+InjectionProcess * InjectionProcess::New(string const & inject, int nodes,
+					 vector<double> load,
 					 Configuration const * const config)
 {
   string process_name;
@@ -108,12 +113,12 @@ InjectionProcess * InjectionProcess::New(string const & inject, int nodes,
       cout << "Missing parameters for injection process: " << inject << endl;
       exit(-1);
     }
-    if((alpha < 0.0 && beta < 0.0) || 
-       (alpha < 0.0 && r1 < 0.0) || 
-       (beta < 0.0 && r1 < 0.0) || 
+    if((alpha < 0.0 && beta < 0.0) ||
+       (alpha < 0.0 && r1 < 0.0) ||
+       (beta < 0.0 && r1 < 0.0) ||
        (alpha >= 0.0 && beta >= 0.0 && r1 >= 0.0)) {
-      cout << "Invalid parameters for injection process: " << inject << endl;
-      exit(-1);
+//      cout << "Invalid parameters for injection process: " << inject << endl;
+//      exit(-1);
     }
     vector<int> initial(nodes);
     if(params.size() > 3) {
@@ -124,7 +129,12 @@ InjectionProcess * InjectionProcess::New(string const & inject, int nodes,
 	initial[n] = RandomInt(1);
       }
     }
-    result = new OnOffInjectionProcess(nodes, load, alpha, beta, r1, initial);
+    vector<double> alpha_vec(nodes, alpha);
+    vector<double> beta_vec(nodes, beta);
+    vector<double> r1_vec(nodes, r1);
+    result = new OnOffInjectionProcess(nodes, load, alpha_vec, beta_vec, r1_vec, initial);
+  } else if (process_name == "component") {
+    result = new ComponentInjectionProcess(nodes, param_str, config);
   } else {
     cout << "Invalid injection process: " << inject << endl;
     exit(-1);
@@ -134,7 +144,7 @@ InjectionProcess * InjectionProcess::New(string const & inject, int nodes,
 
 //=============================================================
 
-BernoulliInjectionProcess::BernoulliInjectionProcess(int nodes, double rate)
+BernoulliInjectionProcess::BernoulliInjectionProcess(int nodes, vector<double> rate)
   : InjectionProcess(nodes, rate)
 {
 
@@ -143,31 +153,33 @@ BernoulliInjectionProcess::BernoulliInjectionProcess(int nodes, double rate)
 bool BernoulliInjectionProcess::test(int source)
 {
   assert((source >= 0) && (source < _nodes));
-  return (RandomFloat() < _rate);
+  return (RandomFloat() < _rate[source]);
 }
 
 //=============================================================
 
-OnOffInjectionProcess::OnOffInjectionProcess(int nodes, double rate, 
-					     double alpha, double beta, 
-					     double r1, vector<int> initial)
-  : InjectionProcess(nodes, rate), 
+OnOffInjectionProcess::OnOffInjectionProcess(int nodes, vector<double> rate,
+					     vector<double> alpha, vector<double> beta,
+					     vector<double> r1, vector<int> initial)
+  : InjectionProcess(nodes, rate),
     _alpha(alpha), _beta(beta), _r1(r1), _initial(initial)
 {
-  assert(alpha <= 1.0);
-  assert(beta <= 1.0);
-  assert(r1 <= 1.0);
-  if(alpha < 0.0) {
-    assert(beta >= 0.0);
-    assert(r1 >= 0.0);
-    _alpha = beta * rate / (r1 - rate);
-  } else if(beta < 0.0) {
-    assert(alpha >= 0.0);
-    assert(r1 >= 0.0);
-    _beta = alpha * (r1 - rate) / rate;
-  } else {
-    assert(r1 < 0.0);
-    _r1 = rate * (alpha + beta) / alpha;
+  for (int i = 0; i < nodes; ++i){
+    assert(alpha[i] <= 1.0);
+    assert(beta[i] <= 1.0);
+    assert(r1[i] <= 1.0);
+    if(alpha[i] < 0.0) {
+      assert(beta[i] >= 0.0);
+      assert(r1[i] >= 0.0);
+      _alpha[i] = beta[i] * rate[i] / (r1[i] - rate[i]);
+    } else if(beta[i] < 0.0) {
+      assert(alpha[i] >= 0.0);
+      assert(r1[i] >= 0.0);
+      _beta[i] = alpha[i] * (r1[i] - rate[i]) / rate[i];
+    } else if(r1[i] < 0.0) {
+//      assert(r1[i] < 0.0);
+      _r1[i] = rate[i] * (alpha[i] + beta[i]) / alpha[i];
+    }
   }
   reset();
 }
@@ -181,10 +193,18 @@ bool OnOffInjectionProcess::test(int source)
 {
   assert((source >= 0) && (source < _nodes));
 
+  bool old_state = _state[source];
+
   // advance state
-  _state[source] = 
-    _state[source] ? (RandomFloat() >= _beta) : (RandomFloat() < _alpha);
+  _state[source] =
+    _state[source] ? (RandomFloat() >= _beta[source]) : (RandomFloat() < _alpha[source]);
+
+  if ((!old_state) && _state[source]) {
+cout << source << ": Injection Process transitioned from off to on" << endl;
+  } else if (old_state && (!_state[source])) {
+cout << source << ": Injection Process transitioned from on to off" << endl;
+  }
 
   // generate packet
-  return _state[source] && (RandomFloat() < _r1);
+  return _state[source] && (RandomFloat() < _r1[source]);
 }

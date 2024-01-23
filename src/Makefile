@@ -26,18 +26,35 @@
 
 LEX = flex
 YACC   = bison -y
-DEFINE = 
-INCPATH = -I. -Iarbiters -Iallocators -Irouters -Inetworks -Ipower
-CPPFLAGS += -Wall $(INCPATH) $(DEFINE)
+DEBUG = 0
+DEFINE = -DDEBUG=$(DEBUG)
+BOOST_INC = /usr/local/include/boost/
+BOOST_LIB = /usr/local/lib
+INCPATH = -I. -Iarbiters -Iallocators -Irouters -Inetworks -Ipower -Iworkloads \
+		  -Iworkloads/shmem -Iworkloads/bale -Iworkloads/workload_components \
+		  -Iworkloads/wcomp -Iboost -Ism $(DEFINE)
+CPPFLAGS += -fcf-protection=full -Wextra -Werror -Wno-unused-parameter -Wall $(INCPATH) -fPIE
+CPPFLAGS += -Wformat -Wformat-security -Werror=format-security -fPIC -D_FORTIFY_SOURCE=2
+CPPFLAGS += -mretpoline -fstack-protector-strong
 CPPFLAGS += -O3
-CPPFLAGS += -g
-LFLAGS +=
+CPPFLAGS += -g -Wno-vla 
+CFLAGS := $(CPPFLAGS)
+CPPFLAGS += -flto -fsanitize=cfi -fsanitize-ignorelist=cfi_ignorelist.txt  -fvisibility=hidden
+CPPFLAGS += -std=c++11
+LFLAGS += -static -pie -pthread -flto -fsanitize=cfi -fsanitize-ignorelist=cfi_ignorelist.txt -fvisibility=hidden -z noexecstack -L$(BOOST_LIB)\
+		  -lpthread -Wl,-z,relro,-z,now,-rpath=$(BOOST_LIB) \
+		  -lm -lstdc++ -lboost_coroutine -lpthread -lboost_filesystem -lboost_chrono -lboost_context -lboost_thread -lboost_system -lboost_contract -lboost_locale -lboost_exception $(DEFINE)
+
+LFLAGS += -flto -fvisibility=hidden
+
+CC=clang-18
+CXX=clang-18
 
 PROG := booksim
 
 # simulator source files
-CPP_SRCS = $(wildcard *.cpp) $(wildcard */*.cpp)
-CPP_HDRS = $(wildcard *.hpp) $(wildcard */*.hpp)
+CPP_SRCS = $(wildcard *.cpp) $(wildcard */*.cpp) $(wildcard workloads/*/*.cpp)
+CPP_HDRS = $(wildcard *.hpp) $(wildcard */*.hpp) $(wildcard workloads/*/*.hpp)
 CPP_DEPS = $(CPP_SRCS:.cpp=.d)
 CPP_OBJS = $(CPP_SRCS:.cpp=.o)
 
@@ -55,7 +72,7 @@ OBJS :=  $(CPP_OBJS) $(LEX_OBJS) $(YACC_OBJS)
 all: $(PROG)
 
 $(PROG): $(OBJS)
-	 $(CXX) $(LFLAGS) $^ -o $@
+	 $(CXX) $^ $(LFLAGS) -o $@
 
 $(LEX_SRCS): config.l
 	$(LEX) $<
@@ -64,10 +81,10 @@ $(YACC_SRCS) $(YACC_HDRS): config.y
 	$(YACC) -d $<
 
 $(LEX_OBJS): $(LEX_SRCS) $(YACC_HDRS)
-	$(CC) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(YACC_OBJS): $(YACC_SRCS)
-	$(CC) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) -MMD -c $< -o $@
