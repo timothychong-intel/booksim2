@@ -38,6 +38,7 @@ class PacketReplyInfo {
 public:
   int source;
   int64_t time;
+  int req_seq_num;
   bool record;
   Flit::FlitType type;
 
