@@ -77,6 +77,8 @@ Stats * GetStats(const std::string & name) {
 }
 
 bool gSwm = false;
+bool gSm = false;
+bool gSmEnd = true;
 bool gSwmAppRunMode = false;
 bool gSimEnabled;
 bool gClearStats;
@@ -183,6 +185,7 @@ int main( int argc, char **argv )
     cerr << "Usage: " << argv[0] << " configfile... [param=value...]" << endl;
     return 0;
  }
+
 
   /*initialize routing, traffic, injection functions
    */
